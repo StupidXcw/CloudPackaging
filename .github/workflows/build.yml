@@ -34,11 +34,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'  # 加缓存
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
       - run: npm install --prefer-offline --no-audit
+        id: npm-install
+        continue-on-error: true  # 允许失败
+      - run: npm install --prefer-offline --no-audit  # 重试一次
+        if: steps.npm-install.outcome == 'failure'
       - run: npm run build
       - run: npx tauri build
       - uses: actions/upload-artifact@v4
@@ -63,6 +68,7 @@ jobs:
         with:
           toolchain: stable
       - run: npm install --prefer-offline --no-audit
+      - run: npm install @tauri-apps/cli  # 强制装全平台 CLI
       - run: npm run build
       - run: npx tauri build
       - uses: actions/upload-artifact@v4
